@@ -23,14 +23,8 @@ $(document).ready(function () {
             await openEarable.sensorManager.writeSensorConfig(0, 0, 0);
         }
 
-        if ($('#isPressureSensorEnabled').is(':checked')) {
-            var pressureSensorSamplingRate = $('#pressureSensorSamplingRate').val();
-            log("Setting sampling rate for pressure sensor: " + pressureSensorSamplingRate + " Hz")
-            await openEarable.sensorManager.writeSensorConfig(1, pressureSensorSamplingRate, 0);
-        } else {
-            log("Setting pressure sensor disabled.")
-            await openEarable.sensorManager.writeSensorConfig(1, 0, 0);
-        }
+        // Pressure sensor is disabled
+        await openEarable.sensorManager.writeSensorConfig(1, 0, 0);
 
         // Check if the checkbox for the microphone is checked
         if ($('#isMicEnabled').is(':checked')) {
@@ -77,8 +71,7 @@ $(document).ready(function () {
             // Enable the isMicEnabled checkbox
             $('#isMicEnabled').prop('checked', true);
 
-            // Set the microphoneSamplingRate dropdown to 16000
-            $('#microphoneSamplingRate').val(16000);
+            // Keep the current microphoneSamplingRate value instead of forcing it to 16000
             var microphoneSamplingRate = $('#microphoneSamplingRate').val();
             log("Setting sampling rate for microphone: " + microphoneSamplingRate + " Hz");
 
@@ -112,8 +105,6 @@ $(document).ready(function () {
             $('#areSensorsEnabled').prop('checked', false); // IMU
             $('#sensorSamplingRate').val(0);
             await openEarable.sensorManager.writeSensorConfig(0, 0, 0); 
-            $('#isPressureSensorEnabled').prop('checked', false); // pressure sensor
-            $('#pressureSensorSamplingRate').val(0);
             await openEarable.sensorManager.writeSensorConfig(1, 0, 0);
         } else {
             createWavFileAndDownload(rawData); // When recording stops, create WAV file
@@ -139,10 +130,10 @@ $(document).ready(function () {
         await openEarable.sensorManager.writeSensorConfig(2, 0, 0);
 
         // Uncheck the checkboxes
-        $('#areSensorsEnabled, #isMicEnabled, #isPressureSensorEnabled, #innerMicrophoneEnabled, #outerMicrophoneEnabled').prop('checked', false);
+        $('#areSensorsEnabled, #isMicEnabled, #innerMicrophoneEnabled, #outerMicrophoneEnabled').prop('checked', false);
 
         // Reset the dropdowns to 0
-        $('#sensorSamplingRate, #microphoneSamplingRate, #pressureSensorSamplingRate').val('0');
+        $('#sensorSamplingRate, #microphoneSamplingRate').val('0');
         $('#microphoneGainInner').val('40');
         $('#microphoneGainOuter').val('40');
     });

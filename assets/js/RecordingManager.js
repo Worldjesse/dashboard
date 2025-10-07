@@ -119,6 +119,59 @@ $(document).ready(function () {
         $('#stopRecordingButton').removeClass("d-none");
 
         $(".is-record-enabled").prop('disabled', true);
+
+        // 自动启动Sensor Control和Audio Control
+        autoStartSensorAndAudioControls();
+    }
+
+    // 自动启动Sensor Control和Audio Control面板的功能
+    function autoStartSensorAndAudioControls() {
+        // 自动启动Sensor Control - 只有在未启动时才启动
+        if ($('#testOcclusionButton').length && !$('#testOcclusionButton').prop('disabled')) {
+            // 检查按钮文本，如果显示"Test Occl."说明未启动，需要启动
+            if ($('#testOcclusionButton').text().trim() === "Test Occl.") {
+                $('#testOcclusionButton').click();
+                log("自动启动传感器测试", "MESSAGE");
+            } else {
+                log("传感器测试已在运行中", "MESSAGE");
+            }
+        }
+
+        // 自动启动Audio Control - 只有在未播放时才播放
+        if ($('#button-play-audio').length && !$('#button-play-audio').prop('disabled')) {
+            // 检查播放按钮是否可用，如果可用说明未在播放
+            if (!$('#button-play-audio').prop('disabled')) {
+                $('#button-play-audio').click();
+                log("自动开始播放音频", "MESSAGE");
+            } else {
+                log("音频已在播放中", "MESSAGE");
+            }
+        }
+    }
+
+    // 自动停止Sensor Control和Audio Control面板的功能
+    function autoStopSensorAndAudioControls() {
+        // 自动停止Sensor Control - 只有在运行中时才停止
+        if ($('#testOcclusionButton').length && !$('#testOcclusionButton').prop('disabled')) {
+            // 检查按钮文本，如果显示"Stop"说明正在运行，需要停止
+            if ($('#testOcclusionButton').text().trim() === "Stop") {
+                $('#testOcclusionButton').click();
+                log("自动停止传感器测试", "MESSAGE");
+            } else {
+                log("传感器测试未在运行", "MESSAGE");
+            }
+        }
+
+        // 自动停止Audio Control - 只有在播放中时才停止
+        if ($('#button-stop-audio').length && !$('#button-stop-audio').prop('disabled')) {
+            // 检查停止按钮是否可用，如果可用说明正在播放
+            if (!$('#button-stop-audio').prop('disabled')) {
+                $('#button-stop-audio').click();
+                log("自动停止音频播放", "MESSAGE");
+            } else {
+                log("音频未在播放", "MESSAGE");
+            }
+        }
     }
 
     function stopRecording() {
@@ -130,6 +183,9 @@ $(document).ready(function () {
 
         generateAndDownloadCSV(dataCache, recordingStartTime);
         dataCache = {};  // Reset data cache after download
+
+        // 自动停止Sensor Control和Audio Control
+        autoStopSensorAndAudioControls();
     }
 
     openEarable.sensorManager.subscribeOnSensorDataReceived((sensorData) => {

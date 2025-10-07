@@ -182,7 +182,7 @@
 
 <body class="pt-1 pb-1">
     <div class="container-fluid d-flex flex-column" style="min-height: 100%;">
-        <div class="row gx-2">
+        <div class="row gx-2 mb-2">
             <div class="col-12 col-md-6 col-xl-2 d-flex align-items-stretch flex-column mt-2">
                 <div class="card" style="background: transparent;;">
                     <div class="card-body d-flex justify-content-center align-items-center">
@@ -259,26 +259,6 @@
                                 </div>
                                 <div class="ms-1">Hz</div>
 
-                                <!-- Second Row -->
-                                <div>
-                                    <input type="checkbox" disabled class="is-connect-enabled"
-                                        id="isPressureSensorEnabled">
-                                </div>
-                                <div class="ms-2"
-                                    style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">
-                                    Pressure Sensor, Temperature Sensor (via BLE)
-                                </div>
-                                <div>
-                                    <select disabled
-                                        class="w-100 is-connect-enabled ms-1 sampling-rate-input form-select"
-                                        name="pressureSensorSamplingRate" id="pressureSensorSamplingRate">
-                                        <option value="0">0</option>
-                                        <option value="10">10</option>
-                                        <option value="20">20</option>
-                                        <option value="30">30</option>
-                                    </select>
-                                </div>
-                                <div class="ms-1">Hz</div>
 
                                 <!-- Third Row -->
                                 <div>
@@ -335,10 +315,6 @@
                                     </select>
                                     <div class="ms-3 1-4-0-controls">dB</div>
                                 </div>
-
-
-
-
                             </div>
                             <!-- Grid Layout Ends Here -->
 
@@ -351,13 +327,8 @@
                                     class="btn btn-disable-sensors btn-stop is-connect-enabled ms-3">Off</button>
                             </div>
                         </div>
-
-
-
-
                     </div>
                 </div>
-
             </div>
             <div class="col-12 col-md-6 col-xl-4 mt-2">
                 <div class="card h-100">
@@ -448,172 +419,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-md-6 col-xl-2 d-flex flex-column mt-2">
-                <div class="card h-100">
-                    <div class="card-body d-flex flex-column h-100">
-                        <div class="d-flex flex-row w-100 justify-content-between">
-                            <h5 class="card-title">RGB LED Control</h5>
-                            <div class="tooltip-indicator" data-toggle="tooltip"
-                                title="You can set the RGB color LED. The rainbow mode shifts through the RGB colors.">
-                                <div>?</div>
-                            </div>
-                        </div>
-
-                        <p class="card-text">Control the RGB LED.
-                        </p>
-                        <div class="d-flex flex-column justify-content-between align-items-stretch flex-fill">
-                            <div class="d-flex flex-row justify-content-between">
-                                <div style="flex: 0 0 40px;">
-                                    <input disabled class="is-connect-enabled w-100 h-100" type="color" id="colorpicker"
-                                        value="#ffffff">
-                                </div>
-                                <input disabled class="ms-2  form-control" style="width: calc(100% - 40px)"
-                                    id="colorInput">
-                            </div>
-
-
-
-                            <button disabled class="btn btn-control is-connect-enabled mt-2" onclick="onSetColor()">Set
-                            </button>
-
-                            <hr />
-                            <div class="d-flex flex-row">
-                                <button disabled class="btn btn-control flex-fill is-connect-enabled"
-                                    onclick="startRainbowMode()">🦄</button>
-                                <button disabled onclick="onTurnOffLed()"
-                                    class="btn btn-stop is-connect-enabled flex-fill ms-2">Off</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="row gx-2 flex-grow-1">
-            <div class="col-12 col-md-6 col-xl-4 mt-2 ">
-                <div class="card h-100">
-                    <div class="card-body d-flex flex-column">
-                        <div class="d-flex flex-row w-100 justify-content-between">
-                            <h5 class="card-title">Accelerometer</h5>
-                            <div class="tooltip-indicator" data-toggle="tooltip"
-                                title="This panel shows live data once the accelerometer is activated.">
-                                <div>?</div>
-                            </div>
-                        </div>
-                        <div class="chartWrapper"><canvas class="w-100" id="accelerometerChart"></canvas></div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-md-6 col-xl-4 mt-2 ">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <div class="d-flex flex-row w-100 justify-content-between">
-                            <h5 class="card-title">Gyroscope</h5>
-                            <div class="tooltip-indicator" data-toggle="tooltip"
-                                title="This panel shows live data once the gyroscope is activated.">
-                                <div>?</div>
-                            </div>
-                        </div>
-                        <div class="chartWrapper"><canvas class="w-100" id="gyroscopeChart"></canvas></div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-md-6 col-xl-4 mt-2 ">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <div class="d-flex flex-row w-100 justify-content-between">
-                            <h5 class="card-title">Magnetometer</h5>
-                            <div class="tooltip-indicator" data-toggle="tooltip"
-                                title="This panel shows live data once the magnetometer is activated.">
-                                <div>?</div>
-                            </div>
-                        </div>
-                        <div class="chartWrapper"><canvas class="w-100" id="magnetometerChart"></canvas></div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-md-6 col-xl-4 mt-2 d-flex">
-                <div class="card d-flex flex-fill">
-                    <div class="card-body h-100 d-flex flex-column">
-                        <div class="d-flex flex-row w-100 justify-content-between">
-                            <h5 class="card-title">3D Model</h5>
-                            <div class="tooltip-indicator" data-toggle="tooltip"
-                                title="This panel shows the orientation of the earable in realtime if the IMU is activated.">
-                                <div>?</div>
-                            </div>
-                        </div>
-                        <div class="d-flex flex-row h-100 align-items-center-center">
-                            <model-viewer class="w-100 flex-fill h-100" disable-tap disable-zoom
-                                src="./assets/models/OpenEarable.glb" camera-orbit="0 0 0"></model-viewer>
-                            <div class="ms-2">
-                                <div>
-                                    <div><b>Roll&#160;Angle</b></div>
-                                    <div style="font-family: monospace;" id="rollAngleValue">0.0</div>
-                                </div>
-                                <div>
-                                    <div><b>Pitch&#160;Angle</b></div>
-                                    <div style="font-family: monospace;" id="pitchAngleValue">0.0</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-md-6 col-xl-4 mt-2 ">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <div class="d-flex flex-row w-100 justify-content-between">
-                            <h5 class="card-title">Pressure Sensor</h5>
-                            <div class="tooltip-indicator" data-toggle="tooltip"
-                                title="This panel shows live data once the pressure sensor is activated.">
-                                <div>?</div>
-                            </div>
-                        </div>
-                        <div class="chartWrapper"><canvas class="w-100" id="pressureSensorChart"></canvas></div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-md-6 col-xl-4 mt-2 ">
-                <div class="card h-100">
-                    <div class="card-body h-100">
-                        <div class="d-flex flex-row w-100 justify-content-between">
-                            <h5 class="card-title">Temperature Sensor</h5>
-                            <div class="tooltip-indicator" data-toggle="tooltip"
-                                title="This panel shows live data once the temperature sensor is activated.">
-                                <div>?</div>
-                            </div>
-                        </div>
-                        <div class="chartWrapper"><canvas class="w-100" id="temperatureSensorChart"></canvas></div>
-
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="row gx-2 mb-2">
-            <div class="col-12 col-xl-8 mt-2 ">
-                <div class="card h-100">
-                    <div class="card-body d-flex flex-column h-100">
-                        <div class="d-flex flex-row w-100 justify-content-between">
-                            <div class="d-flex flex-row justify-content-center align-items-center">
-                                <div>
-                                    <h5 class="card-title">Log </h5>
-                                </div>
-                                <button class="btn btn-clear ms-3" onclick="onClearLog()">Clear Log</button>
-                                <button class="btn btn-clear ms-2" onclick="onClearGraphs()">Clear Graphs</button>
-                            </div>
-
-                            <div class="tooltip-indicator" data-toggle="tooltip"
-                                title="Prints relevant events and shows debug information.">
-                                <div>?</div>
-                            </div>
-                        </div>
-
-                        <div id="log" class="w-100 p-2 mt-3 flex-fill"
-                            style="color: white; min-height: 100px; max-height: 160px; font-family: 'Courier New', Courier, monospace; border: 1px solid rgb(94, 94, 94); border-radius: 0.375rem; overflow-y: scroll; overflow-x: hidden;">
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-xl-4 d-flex mt-2 ">
+            <div class="col-12 col-md-6 col-xl-2 d-flex align-items-stretch flex-column mt-2">
                 <div class="card flex-fill">
                     <div class="card-body d-flex flex-column h-100">
                         <div class="d-flex flex-row w-100 justify-content-between">
@@ -628,26 +434,6 @@
                             </div>
                         </div>
                         <div class="d-flex flex-column w-100 flex-fill" style="font-family: monospace;">
-                            <div class="d-flex w-100 flex-row justify-content-between flex-grow-1">
-                                <button id="btn1" style="border: 3px solid transparent;"
-                                    class="btn flex-fill btn-control">Label 1</button>
-                                <button id="btn2" style="border: 3px solid transparent;"
-                                    class="btn flex-fill ms-2 btn-control">Label 2</button>
-                                <button id="btn3" style="border: 3px solid transparent;"
-                                    class="btn flex-fill ms-2 btn-control">Label 3</button>
-                                <button id="btn4" style="border: 3px solid transparent;"
-                                    class="btn flex-fill ms-2 btn-control">Label 4</button>
-                            </div>
-                            <div class="d-flex w-100 flex-row justify-content-between mt-2 flex-grow-1">
-                                <button id="btn5" style="border: 3px solid transparent;"
-                                    class="btn btn-control flex-fill">Label 5</button>
-                                <button id="btn6" style="border: 3px solid transparent;"
-                                    class="btn btn-control flex-fill flex-fill ms-2">Label 6</button>
-                                <button id="btn7" style="border: 3px solid transparent;"
-                                    class="btn btn-control flex-fill flex-fill ms-2">Label 7</button>
-                                <button id="btn8" style="border: 3px solid transparent;"
-                                    class="btn btn-control flex-fill flex-fill ms-2">Label 8</button>
-                            </div>
                             <div class="d-flex flex-row  mt-2">
                                 <div class="d-flex flex-row justify-content-between align-items-center flex-fill">
                                     <button id="startRecordingButton" class="btn btn-play is-connect-enabled w-100"
@@ -657,16 +443,43 @@
                                         class="btn btn-stop is-connect-enabled w-100 d-none">Stop
                                         Recording</button>
                                 </div>
-                                <button id="btn9" style="border: 3px solid #77F2A1;"
+                                <!-- <button id="btn9" style="border: 3px solid #77F2A1;"
                                     class="btn btn-primary btn-control ms-2">
                                     No Label</button>
                                 <button id="lockButton" class="btn btn-stop ms-2  is-record-enabled"><i
-                                        class="bi bi-lock"></i></button>
+                                        class="bi bi-lock"></i></button> -->
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
+        <!-- <div class="row gx-2 flex-grow-1">
+        </div> -->
+        <div class="row gx-2 mb-2">
+            <div class="col-12 col-xl-12 mt-2 ">
+                <div class="card h-100">
+                    <div class="card-body d-flex flex-column h-100">
+                        <div class="d-flex flex-row w-100 justify-content-between">
+                            <div class="d-flex flex-row justify-content-center align-items-center">
+                                <div>
+                                    <h5 class="card-title">Log </h5>
+                                </div>
+                                <button class="btn btn-clear ms-3" onclick="onClearLog()">Clear Log</button>
+                                <button class="btn btn-clear ms-2" onclick="onClearGraphs()">Clear Graphs</button>
+                            </div>
+                            <div class="tooltip-indicator" data-toggle="tooltip"
+                                title="Prints relevant events and shows debug information.">
+                                <div>?</div>
+                            </div>
+                        </div>
+                        <div id="log" class="w-100 p-2 mt-3 flex-fill"
+                            style="color: white; min-height: 100px; max-height: 460px; font-family: 'Courier New', Courier, monospace; border: 1px solid rgb(94, 94, 94); border-radius: 0.375rem; overflow-y: scroll; overflow-x: hidden;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+          
         </div>
     </div>
 
@@ -676,13 +489,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
         integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.1.1/model-viewer.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- Note: keep import order -->
     <script src="./assets/js/LogManager.js"></script>
+    <!-- <script src="./assets/js/SimpleDebugMode.js"></script> -->
     <script src="./assets/js/OpenEarable.js"></script>
-    <script src="./assets/js/LEDManager.js"></script>
     <script src="./assets/js/ConnectionManager.js"></script>
     <script src="./assets/js/ChartManager.js"></script>
     <script src="./assets/js/RecordingManager.js"></script>
@@ -708,11 +520,17 @@
             // disable all buttons on initial load
             $(".is-connect-enabled").prop('disabled', true);
 
-            // check if bluetooth is supported
-            if ('bluetooth' in navigator) {
-                log('Your browser supports WebBLE. You are ready to connect to OpenEarable!');
+            // 检查调试模式
+            if (window.debugModeManager && window.debugModeManager.isDebugMode) {
+                log('🔧 调试模式已启用 - 使用模拟设备进行开发', "SUCCESS");
+                window.debugModeManager.createMockDataPanel();
             } else {
-                log('Your browser does not support WebBLE. Enable it or download a browser that supports WebBLE (e.g., Chrome version ≥ 56)!', "ERROR");
+                // check if bluetooth is supported
+                if ('bluetooth' in navigator) {
+                    log('Your browser supports WebBLE. You are ready to connect to OpenEarable!');
+                } else {
+                    log('Your browser does not support WebBLE. Enable it or download a browser that supports WebBLE (e.g., Chrome version ≥ 56)!', "ERROR");
+                }
             }
 
             const selectInner = document.getElementById('microphoneGainInner');
