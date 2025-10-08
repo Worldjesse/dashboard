@@ -156,34 +156,67 @@ var recordMic = false;
 var rawData = [];
 
 function createWavFileAndDownload(data) {
-    // Convert rawData to WAV format
-    var wavData = convertToWav(data); // Implement this function based on your needs
+    try {
+        // 检查数据是否有效
+        if (!data || data.length === 0) {
+            log("No audio data to save", "WARNING");
+            return;
+        }
 
-    // Create a Blob and trigger a download
-    var blob = new Blob([wavData], { type: 'audio/wav' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = 'recording.wav';
-    a.click();
-    URL.revokeObjectURL(url);
+        // Convert rawData to WAV format
+        var wavData = convertToWav(data); // Implement this function based on your needs
+
+        if (!wavData || wavData.length === 0) {
+            log("Failed to convert audio data to WAV format", "ERROR");
+            return;
+        }
+
+        // Create a Blob and trigger a download
+        var blob = new Blob([wavData], { type: 'audio/wav' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'recording.wav';
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        log("WAV file downloaded successfully", "SUCCESS");
+    } catch (error) {
+        log("Error creating WAV file: " + error.message, "ERROR");
+    }
 }
 
-function convertToWav(rawData) {
-    // Implement conversion from raw byte data to WAV format
-    // This involves creating a WAV header and concatenating it with raw audio data
-    // Here's a basic outline of what this might look like:
-    var sampleRate = 2000; // Replace with actual sample rate
-    var numChannels = 1; // Replace with number of channels (1 for mono, 2 for stereo)
-    var bitsPerSample = 16; // Replace with actual bit depth
 
-    var header = createWavHeader(rawData.length, sampleRate, numChannels, bitsPerSample);
-    return new Uint8Array([...header, ...rawData]);
+function convertToWav(rawData) {
+    try {
+        // 检查输入数据
+        if (!rawData || rawData.length === 0) {
+            throw new Error("No raw data provided");
+        }
+
+        // Implement conversion from raw byte data to WAV format
+        // This involves creating a WAV header and concatenating it with raw audio data
+        // Here's a basic outline of what this might look like:
+        var sampleRate = 2000; // Replace with actual sample rate
+        var numChannels = 1; // Replace with number of channels (1 for mono, 2 for stereo)
+        var bitsPerSample = 16; // Replace with actual bit depth
+
+        var header = createWavHeader(rawData.length, sampleRate, numChannels, bitsPerSample);
+        if (!header) {
+            throw new Error("Failed to create WAV header");
+        }
+
+        return new Uint8Array([...header, ...rawData]);
+    } catch (error) {
+        log("Error converting to WAV: " + error.message, "ERROR");
+        return null;
+    }
 }
 
 function createWavHeader(dataLength, sampleRate, numChannels, bitsPerSample) {
-    var byteRate = sampleRate * numChannels * (bitsPerSample / 8);
-    var blockAlign = numChannels * (bitsPerSample / 8);
+    try {
+        var byteRate = sampleRate * numChannels * (bitsPerSample / 8);
+        var blockAlign = numChannels * (bitsPerSample / 8);
 
     var header = new Uint8Array(44);
     var view = new DataView(header.buffer);
@@ -207,7 +240,11 @@ function createWavHeader(dataLength, sampleRate, numChannels, bitsPerSample) {
     header.set([100, 97, 116, 97], 36); // "data"
     view.setUint32(40, dataLength, true); // Data chunk size
 
-    return header;
+        return header;
+    } catch (error) {
+        log("Error creating WAV header: " + error.message, "ERROR");
+        return null;
+    }
 }
 
 function printDataViewAsUint16List(dataView) {

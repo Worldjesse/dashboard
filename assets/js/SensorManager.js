@@ -23,8 +23,14 @@ $(document).ready(function () {
             await openEarable.sensorManager.writeSensorConfig(0, 0, 0);
         }
 
-        // Pressure sensor is disabled
-        await openEarable.sensorManager.writeSensorConfig(1, 0, 0);
+        if ($('#isPressureSensorEnabled').is(':checked')) {
+            var pressureSensorSamplingRate = $('#pressureSensorSamplingRate').val();
+            log("Setting sampling rate for pressure sensor: " + pressureSensorSamplingRate + " Hz")
+            await openEarable.sensorManager.writeSensorConfig(1, pressureSensorSamplingRate, 0);
+        } else {
+            log("Setting pressure sensor disabled.")
+            await openEarable.sensorManager.writeSensorConfig(1, 0, 0);
+        }
 
         // Check if the checkbox for the microphone is checked
         if ($('#isMicEnabled').is(':checked')) {
@@ -68,6 +74,10 @@ $(document).ready(function () {
             $("#testOcclusionButton").addClass("btn-stop");
             $("#testOcclusionButton").removeClass("btn-control");
 
+            // Store original pressure sensor state
+            var originalPressureEnabled = $('#isPressureSensorEnabled').is(':checked');
+            var originalPressureRate = $('#pressureSensorSamplingRate').val();
+
             // Enable the isMicEnabled checkbox
             $('#isMicEnabled').prop('checked', true);
 
@@ -101,14 +111,28 @@ $(document).ready(function () {
                 await openEarable.sensorManager.writeSensorConfig(2, microphoneSamplingRate, 0);
             }
 
-            // disable other sensors
+            // disable IMU sensors
             $('#areSensorsEnabled').prop('checked', false); // IMU
             $('#sensorSamplingRate').val(0);
             await openEarable.sensorManager.writeSensorConfig(0, 0, 0); 
-            await openEarable.sensorManager.writeSensorConfig(1, 0, 0);
+
+            // Handle pressure sensor based on original state
+            if (originalPressureEnabled) {
+                // Keep pressure sensor enabled if it was originally enabled
+                log("Keeping pressure sensor enabled for occlusion test: " + originalPressureRate + " Hz");
+                await openEarable.sensorManager.writeSensorConfig(1, originalPressureRate, 0);
+            } else {
+                // Disable pressure sensor if it wasn't originally enabled
+                $('#isPressureSensorEnabled').prop('checked', false);
+                $('#pressureSensorSamplingRate').val(0);
+                await openEarable.sensorManager.writeSensorConfig(1, 0, 0);
+            }
         } else {
             createWavFileAndDownload(rawData); // When recording stops, create WAV file
-            rawData = []; // Clear rawData after saving
+            
+            // Clear data after saving
+            rawData = [];
+            
             $("#testOcclusionButton").text("Test Occl.");
             $("#testOcclusionButton").removeClass("btn-stop");
             $("#testOcclusionButton").addClass("btn-control");
@@ -117,6 +141,9 @@ $(document).ready(function () {
             $('#innerMicrophoneEnabled').prop('checked', false);
             $('#outerMicrophoneEnabled').prop('checked', false);
             $('#isMicEnabled').prop('checked', false);
+            
+            $('#isPressureSensorEnabled').prop('checked', false);
+            $('#pressureSensorSamplingRate').val(0);
 
             // In this version, we just set the sampling rate and no gain settings are required
             await openEarable.sensorManager.writeSensorConfig(2, 0, 0);
@@ -130,10 +157,10 @@ $(document).ready(function () {
         await openEarable.sensorManager.writeSensorConfig(2, 0, 0);
 
         // Uncheck the checkboxes
-        $('#areSensorsEnabled, #isMicEnabled, #innerMicrophoneEnabled, #outerMicrophoneEnabled').prop('checked', false);
+        $('#areSensorsEnabled, #isMicEnabled, #isPressureSensorEnabled, #innerMicrophoneEnabled, #outerMicrophoneEnabled').prop('checked', false);
 
         // Reset the dropdowns to 0
-        $('#sensorSamplingRate, #microphoneSamplingRate').val('0');
+        $('#sensorSamplingRate, #microphoneSamplingRate, #pressureSensorSamplingRate').val('0');
         $('#microphoneGainInner').val('40');
         $('#microphoneGainOuter').val('40');
     });
