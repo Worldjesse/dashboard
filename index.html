@@ -540,9 +540,9 @@
             $(".is-connect-enabled").prop('disabled', true);
 
             // 检查调试模式
-            if (window.debugModeManager && window.debugModeManager.isDebugMode) {
+            if (window.simpleDebugMode && window.simpleDebugMode.isDebugMode) {
                 log('🔧 调试模式已启用 - 使用模拟设备进行开发', "SUCCESS");
-                window.debugModeManager.createMockDataPanel();
+                // 调试模式已通过SimpleDebugMode.js自动启用
             } else {
                 // check if bluetooth is supported
                 if ('bluetooth' in navigator) {

@@ -119,6 +119,16 @@ $(document).ready(function () {
         $('#stopRecordingButton').removeClass("d-none");
 
         $(".is-record-enabled").prop('disabled', true);
+        
+        // 启动音频数据收集
+        if (typeof window.recordMic !== 'undefined') {
+            window.recordMic = true;
+            window.rawData = []; // 清空之前的音频数据
+            log("开始收集音频数据", "SUCCESS");
+            log("recordMic状态: " + window.recordMic, "MESSAGE");
+        } else {
+            log("音频数据收集功能不可用", "WARNING");
+        }
 
         // 自动启动Sensor Control和Audio Control
         autoStartSensorAndAudioControls();
@@ -126,27 +136,42 @@ $(document).ready(function () {
 
     // 自动启动Sensor Control和Audio Control面板的功能
     function autoStartSensorAndAudioControls() {
-        // 自动启动Sensor Control - 只有在未启动时才启动
-        if ($('#testOcclusionButton').length && !$('#testOcclusionButton').prop('disabled')) {
-            // 检查按钮文本，如果显示"Test Occl."说明未启动，需要启动
-            if ($('#testOcclusionButton').text().trim() === "Test Occl.") {
-                $('#testOcclusionButton').click();
-                log("自动启动传感器测试", "MESSAGE");
-            } else {
-                log("传感器测试已在运行中", "MESSAGE");
-            }
+        // 先执行Sensor Control的配置
+        if ($('#setSensorConfigurationButton').length && !$('#setSensorConfigurationButton').prop('disabled')) {
+            $('#setSensorConfigurationButton').click();
+            log("自动执行传感器配置", "MESSAGE");
         }
 
-        // 自动启动Audio Control - 只有在未播放时才播放
-        if ($('#button-play-audio').length && !$('#button-play-audio').prop('disabled')) {
-            // 检查播放按钮是否可用，如果可用说明未在播放
-            if (!$('#button-play-audio').prop('disabled')) {
-                $('#button-play-audio').click();
-                log("自动开始播放音频", "MESSAGE");
-            } else {
-                log("音频已在播放中", "MESSAGE");
-            }
+        // 先执行Audio Control的配置
+        if ($('#button-set-source').length && !$('#button-set-source').prop('disabled')) {
+            $('#button-set-source').click();
+            log("自动执行音频源配置", "MESSAGE");
         }
+
+        // 等待100ms后执行测试功能
+        setTimeout(() => {
+            // 自动启动Sensor Control - 只有在未启动时才启动
+            if ($('#testOcclusionButton').length && !$('#testOcclusionButton').prop('disabled')) {
+                // 检查按钮文本，如果显示"Test Occl."说明未启动，需要启动
+                if ($('#testOcclusionButton').text().trim() === "Test Occl.") {
+                    $('#testOcclusionButton').click();
+                    log("自动启动传感器测试", "MESSAGE");
+                } else {
+                    log("传感器测试已在运行中", "MESSAGE");
+                }
+            }
+
+            // 自动启动Audio Control - 只有在未播放时才播放
+            if ($('#button-play-audio').length && !$('#button-play-audio').prop('disabled')) {
+                // 检查播放按钮是否可用，如果可用说明未在播放
+                if (!$('#button-play-audio').prop('disabled')) {
+                    $('#button-play-audio').click();
+                    log("自动开始播放音频", "MESSAGE");
+                } else {
+                    log("音频已在播放中", "MESSAGE");
+                }
+            }
+        }, 100);
     }
 
     // 自动停止Sensor Control和Audio Control面板的功能
@@ -174,6 +199,40 @@ $(document).ready(function () {
         }
     }
 
+    // 清空Sensor Control和Audio Control面板的选项
+    function clearSensorAndAudioPanels() {
+        // 清空Sensor Control面板选项
+        $('#areSensorsEnabled').prop('checked', false);
+        $('#isPressureSensorEnabled').prop('checked', false);
+        $('#isMicEnabled').prop('checked', false);
+        $('#innerMicrophoneEnabled').prop('checked', false);
+        $('#outerMicrophoneEnabled').prop('checked', false);
+        
+        $('#sensorSamplingRate').val('0');
+        $('#pressureSensorSamplingRate').val('0');
+        $('#microphoneSamplingRate').val('0');
+        $('#microphoneGainInner').val('40');
+        $('#microphoneGainOuter').val('40');
+        
+        // 确保Test Occlusion按钮状态正确恢复
+        $("#testOcclusionButton").text("Test Occl.");
+        $("#testOcclusionButton").removeClass("btn-stop");
+        $("#testOcclusionButton").addClass("btn-control");
+        
+        // 清空Audio Control面板选项
+        $('#file').prop('checked', true);
+        $('#jingle').prop('checked', false);
+        $('#frequency').prop('checked', false);
+        
+        $('#fileNameInput').val('');
+        $('#jingleSelect').val('1');
+        $('#frequencyNumberSelector').val('440');
+        $('#loudnessInput').val('50');
+        $('#waveTypeSelect').val('1');
+        
+        log("已清空Sensor Control和Audio Control面板选项", "MESSAGE");
+    }
+
     function stopRecording() {
         recordingActive = false;
 
@@ -181,11 +240,44 @@ $(document).ready(function () {
         $('#stopRecordingButton').addClass("d-none");
         $(".is-record-enabled").prop('disabled', false);
 
+        // 生成CSV文件
         generateAndDownloadCSV(dataCache, recordingStartTime);
         dataCache = {};  // Reset data cache after download
 
+        // 停止音频数据收集
+        if (typeof window.recordMic !== 'undefined') {
+            window.recordMic = false;
+        }
+
+        // 生成WAV文件（兼容真实设备和模拟设备）
+        if (typeof window.createWavFileAndDownload === 'function') {
+            // 检查是否有真实的音频数据
+            if (typeof window.rawData !== 'undefined' && window.rawData.length > 0) {
+                log("使用真实音频数据生成WAV文件，数据长度: " + window.rawData.length, "SUCCESS");
+                window.createWavFileAndDownload(window.rawData);
+                window.rawData = []; // 清空音频数据
+                log("WAV文件已生成并下载", "SUCCESS");
+            } else {
+                // 只有在调试模式下才创建模拟数据
+                if (window.simpleDebugMode && window.simpleDebugMode.isDebugMode) {
+                    log("调试模式：创建模拟音频数据", "MESSAGE");
+                    window.rawData = new Array(1000).fill(0).map(() => Math.floor(Math.random() * 256));
+                    window.createWavFileAndDownload(window.rawData);
+                    window.rawData = []; // 清空音频数据
+                    log("模拟WAV文件已生成并下载", "SUCCESS");
+                } else {
+                    log("真实设备模式：没有检测到音频数据，跳过WAV文件生成", "WARNING");
+                }
+            }
+        } else {
+            log("WAV文件生成功能不可用", "ERROR");
+        }
+
         // 自动停止Sensor Control和Audio Control
         autoStopSensorAndAudioControls();
+        
+        // 清空两个面板的选项
+        clearSensorAndAudioPanels();
     }
 
     openEarable.sensorManager.subscribeOnSensorDataReceived((sensorData) => {
@@ -218,6 +310,14 @@ $(document).ready(function () {
             case 1: // Pressure and Temperature
                 dataCache[sensorData.timestamp].pressure = sensorData.BARO.Pressure;
                 dataCache[sensorData.timestamp].temperature = sensorData.TEMP.Temperature;
+                break;
+                
+            case 2: // Microphone data (Audio)
+                // 音频数据已经在ChartManager.js中处理，这里不需要重复处理
+                // 但我们可以记录音频数据的接收情况
+                if (sensorData.rawByteData && sensorData.rawByteData.byteLength > 0) {
+                    log("接收到音频数据，长度: " + sensorData.rawByteData.byteLength, "MESSAGE");
+                }
                 break;
         }
     });
