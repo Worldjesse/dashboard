@@ -53,6 +53,26 @@ const WAVE_TYPE = {
 };
 
 /**
+ * Enumeration for sensor recording states.
+ */
+const RECORDING_STATE = {
+    IDLE: 0,
+    RECORDING: 1,
+    PAUSED: 2,
+    STOPPED: 3,
+    ERROR: 4
+};
+
+/**
+ * Enumeration for data format types.
+ */
+const DATA_FORMAT = {
+    CSV: 0,
+    JSON: 1,
+    BINARY: 2
+};
+
+/**
  * Dictionary of the different OpenEarable BLE services.
  */
 const SERVICES = {
@@ -126,6 +146,20 @@ const SERVICES = {
                 UUID: '566916a9-476d-11ee-be56-0242ac120002'
             }
         }
+    },
+    SENSOR_RECORDING_SERVICE: {
+        UUID: '7a8b9c0d-1234-5678-9abc-def012345678',
+        CHARACTERISTICS: {
+            RECORDING_CONTROL_CHARACTERISTIC: {
+                UUID: '7a8b9c0e-1234-5678-9abc-def012345678'
+            },
+            RECORDING_STATUS_CHARACTERISTIC: {
+                UUID: '7a8b9c0f-1234-5678-9abc-def012345678'
+            },
+            RECORDING_CONFIG_CHARACTERISTIC: {
+                UUID: '7a8b9c10-1234-5678-9abc-def012345678'
+            }
+        }
     }
 }
 
@@ -136,7 +170,8 @@ class OpenEarable {
         this.sensorManager = new SensorManager(this.bleManager);
         this.rgbLed = new RGBLed(this.bleManager);
         this.audioPlayer = new AudioPlayer(this.bleManager);
-        this.buttonManager = new ButtonManager(this.bleManager)
+        this.buttonManager = new ButtonManager(this.bleManager);
+        this.sensorRecorder = new SensorDataRecorder(this.bleManager);
         this.firmwareVersion = undefined;
         this.hardwareVersion = undefined;
 
@@ -730,5 +765,291 @@ class ButtonManager {
         this.bleManager.subscribeCharacteristicNotifications(SERVICES.BUTTON_SERVICE.UUID, SERVICES.BUTTON_SERVICE.CHARACTERISTICS.BUTTON_STATE_CHARACTERISTIC.UUID, (notification) => {
             this.buttonStateChangedSubscribers.forEach(callback => callback(new DataView(notification.srcElement.value.buffer).getUint8(0)));
         });
+    }
+}
+
+/**
+ * Represents a sensor data recorder that can save sensor data directly to SD card.
+ */
+class SensorDataRecorder {
+    
+    /**
+     * Create a SensorDataRecorder instance.
+     * @param {Object} bleManager - BLE manager to handle communications with the device.
+     */
+    constructor(bleManager) {
+        this.bleManager = bleManager;
+        this.recordingState = RECORDING_STATE.IDLE;
+        this.recordingStatusSubscribers = [];
+        this.currentConfig = {
+            sensorTypes: [],
+            dataFormat: DATA_FORMAT.CSV,
+            fileName: '',
+            samplingRate: 0
+        };
+    }
+
+    /**
+     * Start recording sensor data to SD card.
+     * @param {Array} sensorTypes - Array of sensor types to record (e.g., [SENSOR_ID.PRESSURE_SENSOR, SENSOR_ID.IMU]).
+     * @param {number} dataFormat - Data format for recording (CSV, JSON, or BINARY).
+     * @param {string} fileName - Name of the file to save data to.
+     * @param {number} samplingRate - Sampling rate in Hz.
+     * @returns {Promise} Resolves when recording starts, rejects otherwise.
+     */
+    async startRecordingToSD(sensorTypes, dataFormat = DATA_FORMAT.CSV, fileName = '', samplingRate = 10) {
+        try {
+            if (this.recordingState === RECORDING_STATE.RECORDING) {
+                throw new Error("Recording is already in progress");
+            }
+
+            // Prepare configuration data
+            // 计算数据长度：命令(1) + 传感器数量(1) + 传感器类型(sensorTypes.length) + 数据格式(1) + 采样率(4) + 文件名长度(1) + 文件名内容
+            const fileNameBytes = new TextEncoder().encode(fileName);
+            const configData = new Uint8Array(1 + 1 + sensorTypes.length + 1 + 4 + 1 + fileNameBytes.length);
+            let offset = 0;
+            
+            // Command: 1 = start recording
+            configData[offset++] = 1;
+            
+            // Sensor types
+            configData[offset++] = sensorTypes.length;
+            for (let sensorType of sensorTypes) {
+                configData[offset++] = sensorType;
+            }
+            
+            // Data format
+            configData[offset++] = dataFormat;
+            
+            // Sampling rate (4 bytes)
+            const rateBytes = new Uint32Array([samplingRate]);
+            configData.set(new Uint8Array(rateBytes.buffer), offset);
+            offset += 4;
+            
+            // File name length and content
+            configData[offset++] = fileNameBytes.length;
+            configData.set(fileNameBytes, offset);
+
+            await this.bleManager.writeCharacteristic(
+                SERVICES.SENSOR_RECORDING_SERVICE.UUID,
+                SERVICES.SENSOR_RECORDING_SERVICE.CHARACTERISTICS.RECORDING_CONTROL_CHARACTERISTIC.UUID,
+                configData
+            );
+
+            this.recordingState = RECORDING_STATE.RECORDING;
+            this.currentConfig = { sensorTypes, dataFormat, fileName, samplingRate };
+            
+            log("开始记录传感器数据到SD卡", "SUCCESS");
+            this.notifyStatusSubscribers();
+            
+        } catch (error) {
+            log("启动SD卡记录失败: " + error.message, "ERROR");
+            this.recordingState = RECORDING_STATE.ERROR;
+            this.notifyStatusSubscribers();
+            throw error;
+        }
+    }
+
+    /**
+     * Stop recording sensor data to SD card.
+     * @returns {Promise} Resolves when recording stops, rejects otherwise.
+     */
+    async stopRecordingToSD() {
+        try {
+            if (this.recordingState !== RECORDING_STATE.RECORDING) {
+                throw new Error("No recording in progress");
+            }
+
+            const data = new Uint8Array([0]); // 0 = stop recording
+            await this.bleManager.writeCharacteristic(
+                SERVICES.SENSOR_RECORDING_SERVICE.UUID,
+                SERVICES.SENSOR_RECORDING_SERVICE.CHARACTERISTICS.RECORDING_CONTROL_CHARACTERISTIC.UUID,
+                data
+            );
+
+            this.recordingState = RECORDING_STATE.STOPPED;
+            log("停止记录传感器数据到SD卡", "SUCCESS");
+            this.notifyStatusSubscribers();
+            
+        } catch (error) {
+            log("停止SD卡记录失败: " + error.message, "ERROR");
+            this.recordingState = RECORDING_STATE.ERROR;
+            this.notifyStatusSubscribers();
+            throw error;
+        }
+    }
+
+    /**
+     * Pause recording sensor data to SD card.
+     * @returns {Promise} Resolves when recording pauses, rejects otherwise.
+     */
+    async pauseRecordingToSD() {
+        try {
+            if (this.recordingState !== RECORDING_STATE.RECORDING) {
+                throw new Error("No recording in progress");
+            }
+
+            const data = new Uint8Array([2]); // 2 = pause recording
+            await this.bleManager.writeCharacteristic(
+                SERVICES.SENSOR_RECORDING_SERVICE.UUID,
+                SERVICES.SENSOR_RECORDING_SERVICE.CHARACTERISTICS.RECORDING_CONTROL_CHARACTERISTIC.UUID,
+                data
+            );
+
+            this.recordingState = RECORDING_STATE.PAUSED;
+            log("暂停记录传感器数据到SD卡", "MESSAGE");
+            this.notifyStatusSubscribers();
+            
+        } catch (error) {
+            log("暂停SD卡记录失败: " + error.message, "ERROR");
+            this.recordingState = RECORDING_STATE.ERROR;
+            this.notifyStatusSubscribers();
+            throw error;
+        }
+    }
+
+    /**
+     * Resume recording sensor data to SD card.
+     * @returns {Promise} Resolves when recording resumes, rejects otherwise.
+     */
+    async resumeRecordingToSD() {
+        try {
+            if (this.recordingState !== RECORDING_STATE.PAUSED) {
+                throw new Error("Recording is not paused");
+            }
+
+            const data = new Uint8Array([3]); // 3 = resume recording
+            await this.bleManager.writeCharacteristic(
+                SERVICES.SENSOR_RECORDING_SERVICE.UUID,
+                SERVICES.SENSOR_RECORDING_SERVICE.CHARACTERISTICS.RECORDING_CONTROL_CHARACTERISTIC.UUID,
+                data
+            );
+
+            this.recordingState = RECORDING_STATE.RECORDING;
+            log("恢复记录传感器数据到SD卡", "SUCCESS");
+            this.notifyStatusSubscribers();
+            
+        } catch (error) {
+            log("恢复SD卡记录失败: " + error.message, "ERROR");
+            this.recordingState = RECORDING_STATE.ERROR;
+            this.notifyStatusSubscribers();
+            throw error;
+        }
+    }
+
+    /**
+     * Get current recording status from device.
+     * @returns {Promise} Resolves with recording status, rejects otherwise.
+     */
+    async getRecordingStatus() {
+        try {
+            const status = await this.bleManager.readCharacteristic(
+                SERVICES.SENSOR_RECORDING_SERVICE.UUID,
+                SERVICES.SENSOR_RECORDING_SERVICE.CHARACTERISTICS.RECORDING_STATUS_CHARACTERISTIC.UUID
+            );
+            
+            this.recordingState = status.getUint8(0);
+            this.notifyStatusSubscribers();
+            return this.recordingState;
+            
+        } catch (error) {
+            log("获取记录状态失败: " + error.message, "ERROR");
+            throw error;
+        }
+    }
+
+    /**
+     * Get recording configuration from device.
+     * @returns {Promise} Resolves with recording configuration, rejects otherwise.
+     */
+    async getRecordingConfig() {
+        try {
+            const config = await this.bleManager.readCharacteristic(
+                SERVICES.SENSOR_RECORDING_SERVICE.UUID,
+                SERVICES.SENSOR_RECORDING_SERVICE.CHARACTERISTICS.RECORDING_CONFIG_CHARACTERISTIC.UUID
+            );
+            
+            // Parse configuration data
+            let offset = 0;
+            const sensorCount = config.getUint8(offset++);
+            const sensorTypes = [];
+            for (let i = 0; i < sensorCount; i++) {
+                sensorTypes.push(config.getUint8(offset++));
+            }
+            const dataFormat = config.getUint8(offset++);
+            const samplingRate = config.getUint32(offset, true);
+            offset += 4;
+            
+            const fileNameLength = config.getUint8(offset++);
+            const fileName = new TextDecoder().decode(config.slice(offset, offset + fileNameLength));
+            
+            this.currentConfig = { sensorTypes, dataFormat, fileName, samplingRate };
+            return this.currentConfig;
+            
+        } catch (error) {
+            log("获取记录配置失败: " + error.message, "ERROR");
+            throw error;
+        }
+    }
+
+    /**
+     * Subscribe to recording status changes.
+     * @param {Function} callback - Callback function to be called when status changes.
+     */
+    subscribeOnRecordingStatusChanged(callback) {
+        this.recordingStatusSubscribers.push(callback);
+    }
+
+    /**
+     * Notify all status subscribers about recording state changes.
+     */
+    notifyStatusSubscribers() {
+        this.recordingStatusSubscribers.forEach(callback => {
+            try {
+                callback(this.recordingState, this.currentConfig);
+            } catch (error) {
+                console.error("Error in recording status callback:", error);
+            }
+        });
+    }
+
+    /**
+     * Get current recording state.
+     * @returns {number} Current recording state.
+     */
+    getRecordingState() {
+        return this.recordingState;
+    }
+
+    /**
+     * Get current recording configuration.
+     * @returns {Object} Current recording configuration.
+     */
+    getCurrentConfig() {
+        return this.currentConfig;
+    }
+
+    /**
+     * Check if recording is active.
+     * @returns {boolean} True if recording is active, false otherwise.
+     */
+    isRecording() {
+        return this.recordingState === RECORDING_STATE.RECORDING;
+    }
+
+    /**
+     * Check if recording is paused.
+     * @returns {boolean} True if recording is paused, false otherwise.
+     */
+    isPaused() {
+        return this.recordingState === RECORDING_STATE.PAUSED;
+    }
+
+    /**
+     * Check if recording has error.
+     * @returns {boolean} True if recording has error, false otherwise.
+     */
+    hasError() {
+        return this.recordingState === RECORDING_STATE.ERROR;
     }
 }

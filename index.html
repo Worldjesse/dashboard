@@ -354,6 +354,99 @@
                     <div class="card-body d-flex flex-column justify-content-between">
                         <div>
                             <div class="d-flex flex-row w-100 justify-content-between">
+                                <h5 class="card-title">SD卡记录控制</h5>
+                                <div class="tooltip-indicator" data-toggle="tooltip"
+                                    title="将传感器数据直接记录到OpenEarable设备的microSD卡上。支持压力、温度、IMU等传感器数据记录。">
+                                    <div>?</div>
+                                </div>
+                            </div>
+                            <p class="card-text">选择要记录的传感器类型和数据格式，数据将直接保存到设备的SD卡中。</p>
+                        </div>
+
+                        <div class="d-flex flex-column flex-fill justify-content-between">
+                            <!-- 传感器选择 -->
+                            <div class="mb-3">
+                                <label class="form-label">选择传感器类型：</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="sdRecordPressure" disabled>
+                                    <label class="form-check-label" for="sdRecordPressure">
+                                        压力传感器
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="sdRecordTemperature" disabled>
+                                    <label class="form-check-label" for="sdRecordTemperature">
+                                        温度传感器
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="sdRecordIMU" disabled>
+                                    <label class="form-check-label" for="sdRecordIMU">
+                                        IMU传感器 (加速度计、陀螺仪、磁力计)
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- 数据格式选择 -->
+                            <div class="mb-3">
+                                <label for="sdDataFormat" class="form-label">数据格式：</label>
+                                <select class="form-select" id="sdDataFormat" disabled>
+                                    <option value="0">CSV格式</option>
+                                    <option value="1">JSON格式</option>
+                                    <option value="2">二进制格式</option>
+                                </select>
+                            </div>
+
+                            <!-- 文件名输入 -->
+                            <div class="mb-3">
+                                <label for="sdFileName" class="form-label">文件名：</label>
+                                <input type="text" class="form-control" id="sdFileName" placeholder="sensor_data" disabled>
+                            </div>
+
+                            <!-- 采样率设置 -->
+                            <div class="mb-3">
+                                <label for="sdSamplingRate" class="form-label">采样率 (Hz)：</label>
+                                <select class="form-select" id="sdSamplingRate" disabled>
+                                    <option value="1">1 Hz</option>
+                                    <option value="5">5 Hz</option>
+                                    <option value="10" selected>10 Hz</option>
+                                    <option value="20">20 Hz</option>
+                                    <option value="30">30 Hz</option>
+                                    <option value="50">50 Hz</option>
+                                </select>
+                            </div>
+
+                            <!-- 记录状态显示 -->
+                            <div class="mb-3">
+                                <div class="alert alert-info" id="sdRecordingStatus" style="display: none;">
+                                    <strong>记录状态：</strong><span id="sdStatusText">空闲</span>
+                                </div>
+                            </div>
+
+                            <!-- 控制按钮 -->
+                            <div class="d-flex flex-row w-100 justify-content-between">
+                                <button disabled id="startSDRecordingButton" class="btn btn-success is-connect-enabled flex-fill">
+                                    <i class="bi bi-record-circle"></i> 开始记录
+                                </button>
+                                <button disabled id="pauseSDRecordingButton" class="btn btn-warning is-connect-enabled ms-2" style="display: none;">
+                                    <i class="bi bi-pause-circle"></i> 暂停
+                                </button>
+                                <button disabled id="resumeSDRecordingButton" class="btn btn-info is-connect-enabled ms-2" style="display: none;">
+                                    <i class="bi bi-play-circle"></i> 恢复
+                                </button>
+                                <button disabled id="stopSDRecordingButton" class="btn btn-danger is-connect-enabled ms-2" style="display: none;">
+                                    <i class="bi bi-stop-circle"></i> 停止
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-xl-4 mt-2">
+                <div class="card h-100">
+                    <div class="card-body d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="d-flex flex-row w-100 justify-content-between">
                                 <h5 class="card-title">Audio Control </h5>
                                 <div class="tooltip-indicator" data-toggle="tooltip"
                                     title="Audio files are played locally from the microSD card inside OpenEarable. The supported file formats are single channel, 16-bit, 44.1 kHz *.wav files.">
@@ -512,13 +605,15 @@
 
     <!-- Note: keep import order -->
     <script src="./assets/js/LogManager.js"></script>
-    <!-- <script src="./assets/js/SimpleDebugMode.js"></script> -->
+    <script src="./assets/js/SimpleDebugMode.js"></script>
     <script src="./assets/js/OpenEarable.js"></script>
     <script src="./assets/js/ConnectionManager.js"></script>
     <script src="./assets/js/ChartManager.js"></script>
     <script src="./assets/js/RecordingManager.js"></script>
     <script src="./assets/js/AudioManager.js"></script>
     <script src="./assets/js/SensorManager.js"></script>
+    <script src="./assets/js/DataFormatHandler.js"></script>
+    <script src="./assets/js/SDRecordingManager.js"></script>
     <script>
         /* initialization tasks */
 
