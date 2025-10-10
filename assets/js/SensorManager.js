@@ -66,6 +66,14 @@ $(document).ready(function () {
         }
     });
 
+    // 添加标志来区分自动触发和用户手动操作
+    var isAutoTriggered = false;
+    
+    // 设置自动触发标志的函数
+    window.setTestOcclusionAutoTrigger = function(value) {
+        isAutoTriggered = value;
+    };
+
     $('#testOcclusionButton').on('click', async function () {
         recordMic = !recordMic; // Toggle recording state
 
@@ -128,7 +136,13 @@ $(document).ready(function () {
                 await openEarable.sensorManager.writeSensorConfig(1, 0, 0);
             }
         } else {
-            createWavFileAndDownload(rawData); // When recording stops, create WAV file
+            // 只有在用户手动操作时才生成WAV文件，自动触发时不生成
+            if (!isAutoTriggered) {
+                createWavFileAndDownload(rawData); // When recording stops, create WAV file
+                log("用户手动停止Test Occlusion，生成WAV文件", "MESSAGE");
+            } else {
+                log("自动停止Test Occlusion，不生成WAV文件", "MESSAGE");
+            }
             
             // Clear data after saving
             rawData = [];
@@ -137,13 +151,8 @@ $(document).ready(function () {
             $("#testOcclusionButton").removeClass("btn-stop");
             $("#testOcclusionButton").addClass("btn-control");
 
-            $('#microphoneSamplingRate').val(0);
-            $('#innerMicrophoneEnabled').prop('checked', false);
-            $('#outerMicrophoneEnabled').prop('checked', false);
-            $('#isMicEnabled').prop('checked', false);
-            
-            $('#isPressureSensorEnabled').prop('checked', false);
-            $('#pressureSensorSamplingRate').val(0);
+            // 重置自动触发标志
+            isAutoTriggered = false;
 
             // In this version, we just set the sampling rate and no gain settings are required
             await openEarable.sensorManager.writeSensorConfig(2, 0, 0);

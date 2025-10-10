@@ -154,6 +154,10 @@ $(document).ready(function () {
             if ($('#testOcclusionButton').length && !$('#testOcclusionButton').prop('disabled')) {
                 // 检查按钮文本，如果显示"Test Occl."说明未启动，需要启动
                 if ($('#testOcclusionButton').text().trim() === "Test Occl.") {
+                    // 设置自动触发标志
+                    if (typeof window.setTestOcclusionAutoTrigger === 'function') {
+                        window.setTestOcclusionAutoTrigger(true);
+                    }
                     $('#testOcclusionButton').click();
                     log("自动启动传感器测试", "MESSAGE");
                 } else {
@@ -180,6 +184,10 @@ $(document).ready(function () {
         if ($('#testOcclusionButton').length && !$('#testOcclusionButton').prop('disabled')) {
             // 检查按钮文本，如果显示"Stop"说明正在运行，需要停止
             if ($('#testOcclusionButton').text().trim() === "Stop") {
+                // 设置自动触发标志
+                if (typeof window.setTestOcclusionAutoTrigger === 'function') {
+                    window.setTestOcclusionAutoTrigger(true);
+                }
                 $('#testOcclusionButton').click();
                 log("自动停止传感器测试", "MESSAGE");
             } else {
@@ -201,36 +209,12 @@ $(document).ready(function () {
 
     // 清空Sensor Control和Audio Control面板的选项
     function clearSensorAndAudioPanels() {
-        // 清空Sensor Control面板选项
-        $('#areSensorsEnabled').prop('checked', false);
-        $('#isPressureSensorEnabled').prop('checked', false);
-        $('#isMicEnabled').prop('checked', false);
-        $('#innerMicrophoneEnabled').prop('checked', false);
-        $('#outerMicrophoneEnabled').prop('checked', false);
-        
-        $('#sensorSamplingRate').val('0');
-        $('#pressureSensorSamplingRate').val('0');
-        $('#microphoneSamplingRate').val('0');
-        $('#microphoneGainInner').val('40');
-        $('#microphoneGainOuter').val('40');
-        
-        // 确保Test Occlusion按钮状态正确恢复
+        // 只重置Test Occlusion按钮状态，保持其他设置不变
         $("#testOcclusionButton").text("Test Occl.");
         $("#testOcclusionButton").removeClass("btn-stop");
         $("#testOcclusionButton").addClass("btn-control");
         
         // 清空Audio Control面板选项
-        $('#file').prop('checked', true);
-        $('#jingle').prop('checked', false);
-        $('#frequency').prop('checked', false);
-        
-        $('#fileNameInput').val('');
-        $('#jingleSelect').val('1');
-        $('#frequencyNumberSelector').val('440');
-        $('#loudnessInput').val('50');
-        $('#waveTypeSelect').val('1');
-        
-        log("已清空Sensor Control和Audio Control面板选项", "MESSAGE");
     }
 
     function stopRecording() {
@@ -276,7 +260,7 @@ $(document).ready(function () {
         // 自动停止Sensor Control和Audio Control
         autoStopSensorAndAudioControls();
         
-        // 清空两个面板的选项
+        // 只重置Test Occlusion按钮状态，保持其他设置不变
         clearSensorAndAudioPanels();
     }
 
