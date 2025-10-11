@@ -354,99 +354,6 @@
                     <div class="card-body d-flex flex-column justify-content-between">
                         <div>
                             <div class="d-flex flex-row w-100 justify-content-between">
-                                <h5 class="card-title">SD卡记录控制</h5>
-                                <div class="tooltip-indicator" data-toggle="tooltip"
-                                    title="将传感器数据直接记录到OpenEarable设备的microSD卡上。支持压力、温度、IMU等传感器数据记录。">
-                                    <div>?</div>
-                                </div>
-                            </div>
-                            <p class="card-text">选择要记录的传感器类型和数据格式，数据将直接保存到设备的SD卡中。</p>
-                        </div>
-
-                        <div class="d-flex flex-column flex-fill justify-content-between">
-                            <!-- 传感器选择 -->
-                            <div class="mb-3">
-                                <label class="form-label">选择传感器类型：</label>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="sdRecordPressure" disabled>
-                                    <label class="form-check-label" for="sdRecordPressure">
-                                        压力传感器
-                                    </label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="sdRecordTemperature" disabled>
-                                    <label class="form-check-label" for="sdRecordTemperature">
-                                        温度传感器
-                                    </label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="sdRecordIMU" disabled>
-                                    <label class="form-check-label" for="sdRecordIMU">
-                                        IMU传感器 (加速度计、陀螺仪、磁力计)
-                                    </label>
-                                </div>
-                            </div>
-
-                            <!-- 数据格式选择 -->
-                            <div class="mb-3">
-                                <label for="sdDataFormat" class="form-label">数据格式：</label>
-                                <select class="form-select" id="sdDataFormat" disabled>
-                                    <option value="0">CSV格式</option>
-                                    <option value="1">JSON格式</option>
-                                    <option value="2">二进制格式</option>
-                                </select>
-                            </div>
-
-                            <!-- 文件名输入 -->
-                            <div class="mb-3">
-                                <label for="sdFileName" class="form-label">文件名：</label>
-                                <input type="text" class="form-control" id="sdFileName" placeholder="sensor_data" disabled>
-                            </div>
-
-                            <!-- 采样率设置 -->
-                            <div class="mb-3">
-                                <label for="sdSamplingRate" class="form-label">采样率 (Hz)：</label>
-                                <select class="form-select" id="sdSamplingRate" disabled>
-                                    <option value="1">1 Hz</option>
-                                    <option value="5">5 Hz</option>
-                                    <option value="10" selected>10 Hz</option>
-                                    <option value="20">20 Hz</option>
-                                    <option value="30">30 Hz</option>
-                                    <option value="50">50 Hz</option>
-                                </select>
-                            </div>
-
-                            <!-- 记录状态显示 -->
-                            <div class="mb-3">
-                                <div class="alert alert-info" id="sdRecordingStatus" style="display: none;">
-                                    <strong>记录状态：</strong><span id="sdStatusText">空闲</span>
-                                </div>
-                            </div>
-
-                            <!-- 控制按钮 -->
-                            <div class="d-flex flex-row w-100 justify-content-between">
-                                <button disabled id="startSDRecordingButton" class="btn btn-success is-connect-enabled flex-fill">
-                                    <i class="bi bi-record-circle"></i> 开始记录
-                                </button>
-                                <button disabled id="pauseSDRecordingButton" class="btn btn-warning is-connect-enabled ms-2" style="display: none;">
-                                    <i class="bi bi-pause-circle"></i> 暂停
-                                </button>
-                                <button disabled id="resumeSDRecordingButton" class="btn btn-info is-connect-enabled ms-2" style="display: none;">
-                                    <i class="bi bi-play-circle"></i> 恢复
-                                </button>
-                                <button disabled id="stopSDRecordingButton" class="btn btn-danger is-connect-enabled ms-2" style="display: none;">
-                                    <i class="bi bi-stop-circle"></i> 停止
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-md-6 col-xl-4 mt-2">
-                <div class="card h-100">
-                    <div class="card-body d-flex flex-column justify-content-between">
-                        <div>
-                            <div class="d-flex flex-row w-100 justify-content-between">
                                 <h5 class="card-title">Audio Control </h5>
                                 <div class="tooltip-indicator" data-toggle="tooltip"
                                     title="Audio files are played locally from the microSD card inside OpenEarable. The supported file formats are single channel, 16-bit, 44.1 kHz *.wav files.">
@@ -569,7 +476,7 @@
         <!-- <div class="row gx-2 flex-grow-1">
         </div> -->
         <div class="row gx-2 mb-2">
-            <div class="col-12 col-xl-12 mt-2 ">
+            <div class="col-12 col-xl-8 mt-2 ">
                 <div class="card h-100">
                     <div class="card-body d-flex flex-column h-100">
                         <div class="d-flex flex-row w-100 justify-content-between">
@@ -591,7 +498,43 @@
                     </div>
                 </div>
             </div>
-          
+            <div class="col-12 col-xl-4 mt-2">
+                <div class="card h-100">
+                    <div class="card-body d-flex flex-column h-100">
+                        <div class="d-flex flex-row w-100 justify-content-between">
+                            <h5 class="card-title">SD卡记录状态</h5>
+                            <div class="tooltip-indicator" data-toggle="tooltip"
+                                title="显示SD卡记录的状态和统计信息。在调试模式下会显示模拟数据。">
+                                <div>?</div>
+                            </div>
+                        </div>
+                        <div class="d-flex flex-column flex-fill justify-content-between">
+                            <div id="sdStatusInfo" class="mb-3">
+                                <div class="alert alert-info" id="sdStatusDisplay">
+                                    <strong>状态：</strong><span id="sdStatusText">空闲</span>
+                                </div>
+                                <div class="mt-2">
+                                    <small class="text-muted">记录时长：</small>
+                                    <div id="sdDuration" class="font-monospace">00:00</div>
+                                </div>
+                                <div class="mt-2">
+                                    <small class="text-muted">数据点数：</small>
+                                    <div id="sdDataCount" class="font-monospace">0</div>
+                                </div>
+                                <div class="mt-2">
+                                    <small class="text-muted">采样率：</small>
+                                    <div id="sdSamplingRate" class="font-monospace">0 Hz</div>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <button id="testSDRecording" class="btn btn-info w-100" onclick="testSDRecording()">
+                                    <i class="bi bi-play-circle"></i> 测试SD卡记录
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -605,7 +548,7 @@
 
     <!-- Note: keep import order -->
     <script src="./assets/js/LogManager.js"></script>
-    <script src="./assets/js/SimpleDebugMode.js"></script>
+    <!-- <script src="./assets/js/SimpleDebugMode.js"></script> -->
     <script src="./assets/js/OpenEarable.js"></script>
     <script src="./assets/js/ConnectionManager.js"></script>
     <script src="./assets/js/ChartManager.js"></script>
@@ -669,6 +612,74 @@
             selectInner.selectedIndex = 40;
             selectOuter.selectedIndex = 40;
         });
+
+        // SD卡记录测试函数
+        function testSDRecording() {
+            if (window.simpleDebugMode && window.simpleDebugMode.isDebugMode) {
+                // 测试模拟SD卡记录
+                const sensorTypes = [SENSOR_ID.PRESSURE_SENSOR];
+                const dataFormat = 0;
+                const fileName = `test_sensor_data_${new Date().toISOString().replace(/[:.]/g, '-')}`;
+                const samplingRate = 10;
+                
+                window.simpleDebugMode.simulateSDRecordingStart(sensorTypes, dataFormat, fileName, samplingRate);
+                
+                // 更新状态显示
+                updateSDStatusDisplay('正在记录...', 'alert-success');
+                startSDStatusUpdate();
+                
+                // 5秒后自动停止测试
+                setTimeout(() => {
+                    window.simpleDebugMode.simulateSDRecordingStop();
+                    updateSDStatusDisplay('已停止', 'alert-info');
+                    stopSDStatusUpdate();
+                }, 5000);
+            } else {
+                log("请先启用调试模式", "WARNING");
+            }
+        }
+
+        // 更新SD卡状态显示
+        function updateSDStatusDisplay(status, alertClass) {
+            $('#sdStatusText').text(status);
+            $('#sdStatusDisplay').removeClass('alert-info alert-success alert-warning alert-danger')
+                                .addClass(alertClass);
+        }
+
+        // 开始更新SD卡状态
+        function startSDStatusUpdate() {
+            if (window.sdStatusUpdateInterval) {
+                clearInterval(window.sdStatusUpdateInterval);
+            }
+            
+            window.sdStatusUpdateInterval = setInterval(() => {
+                if (window.simpleDebugMode && window.simpleDebugMode.sdRecordingActive) {
+                    const duration = new Date() - window.simpleDebugMode.sdRecordingConfig.startTime;
+                    const dataCount = window.simpleDebugMode.sdRecordingData.length;
+                    const samplingRate = window.simpleDebugMode.sdRecordingConfig.samplingRate;
+                    
+                    $('#sdDuration').text(formatDuration(duration));
+                    $('#sdDataCount').text(dataCount);
+                    $('#sdSamplingRate').text(samplingRate + ' Hz');
+                }
+            }, 100);
+        }
+
+        // 停止更新SD卡状态
+        function stopSDStatusUpdate() {
+            if (window.sdStatusUpdateInterval) {
+                clearInterval(window.sdStatusUpdateInterval);
+                window.sdStatusUpdateInterval = null;
+            }
+        }
+
+        // 格式化时长显示
+        function formatDuration(milliseconds) {
+            const seconds = Math.floor(milliseconds / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+        }
     </script>
 </body>
 

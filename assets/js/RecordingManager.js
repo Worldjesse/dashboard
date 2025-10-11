@@ -130,8 +130,72 @@ $(document).ready(function () {
             log("音频数据收集功能不可用", "WARNING");
         }
 
+        // 自动启动SD卡记录（压力传感器和温度传感器）
+        autoStartSDRecording();
+
         // 自动启动Sensor Control和Audio Control
         autoStartSensorAndAudioControls();
+    }
+
+    // 自动启动SD卡记录功能
+    async function autoStartSDRecording() {
+        try {
+            // 设置默认参数：只记录压力传感器和温度传感器
+            const sensorTypes = [SENSOR_ID.PRESSURE_SENSOR];
+            const dataFormat = 0; // CSV格式
+            const fileName = `sensor_data_${new Date().toISOString().replace(/[:.]/g, '-')}`;
+            const samplingRate = 10; // 10 Hz
+
+            // 检查是否在调试模式
+            if (window.simpleDebugMode && window.simpleDebugMode.isDebugMode) {
+                log("🔧 调试模式：使用模拟SD卡记录功能", "MESSAGE");
+                window.simpleDebugMode.simulateSDRecordingStart(sensorTypes, dataFormat, fileName, samplingRate);
+                return;
+            }
+
+            // 真实设备模式
+            if (typeof openEarable === 'undefined' || !openEarable.sensorRecorder) {
+                log("SD卡记录功能不可用", "WARNING");
+                return;
+            }
+
+            log(`开始记录传感器数据到SD卡: 压力传感器和温度传感器`, "SUCCESS");
+            
+            await openEarable.sensorRecorder.startRecordingToSD(
+                sensorTypes,
+                dataFormat,
+                fileName,
+                samplingRate
+            );
+
+            log("SD卡记录已启动", "SUCCESS");
+        } catch (error) {
+            log("启动SD卡记录失败: " + error.message, "ERROR");
+        }
+    }
+
+    // 自动停止SD卡记录功能
+    async function autoStopSDRecording() {
+        try {
+            // 检查是否在调试模式
+            if (window.simpleDebugMode && window.simpleDebugMode.isDebugMode) {
+                log("🔧 调试模式：停止模拟SD卡记录", "MESSAGE");
+                window.simpleDebugMode.simulateSDRecordingStop();
+                return;
+            }
+
+            // 真实设备模式
+            if (typeof openEarable === 'undefined' || !openEarable.sensorRecorder) {
+                log("SD卡记录功能不可用", "WARNING");
+                return;
+            }
+
+            log("停止记录传感器数据到SD卡", "MESSAGE");
+            await openEarable.sensorRecorder.stopRecordingToSD();
+            log("SD卡记录已停止", "SUCCESS");
+        } catch (error) {
+            log("停止SD卡记录失败: " + error.message, "ERROR");
+        }
     }
 
     // 自动启动Sensor Control和Audio Control面板的功能
@@ -256,6 +320,9 @@ $(document).ready(function () {
         } else {
             log("WAV文件生成功能不可用", "ERROR");
         }
+
+        // 自动停止SD卡记录
+        autoStopSDRecording();
 
         // 自动停止Sensor Control和Audio Control
         autoStopSensorAndAudioControls();

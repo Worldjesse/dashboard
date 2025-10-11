@@ -1,6 +1,7 @@
 /**
  * SD卡记录管理器
  * 处理传感器数据直接记录到OpenEarable设备SD卡的功能
+ * 简化版本：只提供核心记录功能，不包含UI控制
  */
 class SDRecordingManager {
     constructor() {
@@ -8,54 +9,20 @@ class SDRecordingManager {
         this.recordingState = RECORDING_STATE.IDLE;
         this.currentConfig = null;
         
-        // 绑定事件处理器
-        this.bindEventHandlers();
-        
         // 订阅连接状态变化
         if (typeof openEarable !== 'undefined') {
             openEarable.bleManager.subscribeOnConnected(() => {
                 this.isConnected = true;
-                this.enableControls();
                 this.initializeSDRecording();
             });
             
             openEarable.bleManager.subscribeOnDisconnected(() => {
                 this.isConnected = false;
-                this.disableControls();
                 this.resetRecordingState();
             });
         }
     }
 
-    /**
-     * 绑定事件处理器
-     */
-    bindEventHandlers() {
-        // 开始记录按钮
-        $('#startSDRecordingButton').click(() => {
-            this.startRecording();
-        });
-
-        // 停止记录按钮
-        $('#stopSDRecordingButton').click(() => {
-            this.stopRecording();
-        });
-
-        // 暂停记录按钮
-        $('#pauseSDRecordingButton').click(() => {
-            this.pauseRecording();
-        });
-
-        // 恢复记录按钮
-        $('#resumeSDRecordingButton').click(() => {
-            this.resumeRecording();
-        });
-
-        // 传感器选择变化
-        $('#sdRecordPressure, #sdRecordTemperature, #sdRecordIMU').change(() => {
-            this.updateStartButtonState();
-        });
-    }
 
     /**
      * 初始化SD卡记录功能
@@ -98,23 +65,13 @@ class SDRecordingManager {
     }
 
     /**
-     * 开始记录
+     * 开始记录（简化版本，由RecordingManager调用）
      */
-    async startRecording() {
+    async startRecording(sensorTypes, dataFormat, fileName, samplingRate) {
         try {
-            const sensorTypes = this.getSelectedSensorTypes();
-            if (sensorTypes.length === 0) {
-                log("请至少选择一个传感器类型", "WARNING");
-                return;
-            }
-
-            const dataFormat = parseInt($('#sdDataFormat').val());
-            const fileName = $('#sdFileName').val() || 'sensor_data';
-            const samplingRate = parseInt($('#sdSamplingRate').val());
-
             // 验证输入参数
             if (!this.validateRecordingParameters(sensorTypes, dataFormat, fileName, samplingRate)) {
-                return;
+                return false;
             }
 
             log(`开始记录传感器数据到SD卡: ${sensorTypes.join(', ')}`, "MESSAGE");
@@ -126,9 +83,10 @@ class SDRecordingManager {
                 samplingRate
             );
 
-            this.updateUI();
+            return true;
         } catch (error) {
-            SDRecordingErrorHandler.handleGenericError(error, "开始记录");
+            log("开始记录失败: " + error.message, "ERROR");
+            return false;
         }
     }
 
@@ -171,201 +129,25 @@ class SDRecordingManager {
     }
 
     /**
-     * 停止记录
+     * 停止记录（简化版本）
      */
     async stopRecording() {
         try {
             log("停止记录传感器数据到SD卡", "MESSAGE");
             await openEarable.sensorRecorder.stopRecordingToSD();
-            this.updateUI();
+            return true;
         } catch (error) {
-            SDRecordingErrorHandler.handleRecordingStateError(error);
+            log("停止记录失败: " + error.message, "ERROR");
+            return false;
         }
     }
 
     /**
-     * 暂停记录
-     */
-    async pauseRecording() {
-        try {
-            log("暂停记录传感器数据到SD卡", "MESSAGE");
-            await openEarable.sensorRecorder.pauseRecordingToSD();
-            this.updateUI();
-        } catch (error) {
-            SDRecordingErrorHandler.handleRecordingStateError(error);
-        }
-    }
-
-    /**
-     * 恢复记录
-     */
-    async resumeRecording() {
-        try {
-            log("恢复记录传感器数据到SD卡", "MESSAGE");
-            await openEarable.sensorRecorder.resumeRecordingToSD();
-            this.updateUI();
-        } catch (error) {
-            SDRecordingErrorHandler.handleRecordingStateError(error);
-        }
-    }
-
-    /**
-     * 获取选中的传感器类型
-     */
-    getSelectedSensorTypes() {
-        const sensorTypes = [];
-        
-        // 检查压力传感器
-        if ($('#sdRecordPressure').is(':checked')) {
-            sensorTypes.push(SENSOR_ID.PRESSURE_SENSOR);
-        }
-        
-        // 检查温度传感器（注意：温度和压力传感器在OpenEarable中是同一个传感器，但数据不同）
-        if ($('#sdRecordTemperature').is(':checked')) {
-            // 如果压力传感器已经添加，不要重复添加
-            if (!sensorTypes.includes(SENSOR_ID.PRESSURE_SENSOR)) {
-                sensorTypes.push(SENSOR_ID.PRESSURE_SENSOR);
-            }
-        }
-        
-        // 检查IMU传感器
-        if ($('#sdRecordIMU').is(':checked')) {
-            sensorTypes.push(SENSOR_ID.IMU);
-        }
-        
-        return sensorTypes;
-    }
-
-    /**
-     * 更新UI状态
-     */
-    updateUI() {
-        try {
-            const statusText = this.getStatusText();
-            const statusClass = this.getStatusClass();
-            
-            // 更新状态显示
-            $('#sdStatusText').text(statusText);
-            $('#sdRecordingStatus').removeClass('alert-info alert-success alert-warning alert-danger')
-                                   .addClass(statusClass)
-                                   .show();
-
-            // 更新按钮状态
-            this.updateButtonStates();
-            
-            // 更新开始按钮状态（检查传感器选择）
-            this.updateStartButtonState();
-        } catch (error) {
-            console.error("更新UI状态时出错:", error);
-        }
-    }
-
-    /**
-     * 获取状态文本
-     */
-    getStatusText() {
-        switch (this.recordingState) {
-            case RECORDING_STATE.IDLE:
-                return '空闲';
-            case RECORDING_STATE.RECORDING:
-                return '正在记录...';
-            case RECORDING_STATE.PAUSED:
-                return '已暂停';
-            case RECORDING_STATE.STOPPED:
-                return '已停止';
-            case RECORDING_STATE.ERROR:
-                return '错误';
-            default:
-                return '未知状态';
-        }
-    }
-
-    /**
-     * 获取状态样式类
-     */
-    getStatusClass() {
-        switch (this.recordingState) {
-            case RECORDING_STATE.IDLE:
-                return 'alert-info';
-            case RECORDING_STATE.RECORDING:
-                return 'alert-success';
-            case RECORDING_STATE.PAUSED:
-                return 'alert-warning';
-            case RECORDING_STATE.STOPPED:
-                return 'alert-info';
-            case RECORDING_STATE.ERROR:
-                return 'alert-danger';
-            default:
-                return 'alert-info';
-        }
-    }
-
-    /**
-     * 更新按钮状态
-     */
-    updateButtonStates() {
-        const isRecording = this.recordingState === RECORDING_STATE.RECORDING;
-        const isPaused = this.recordingState === RECORDING_STATE.PAUSED;
-        const isIdle = this.recordingState === RECORDING_STATE.IDLE;
-        const isStopped = this.recordingState === RECORDING_STATE.STOPPED;
-
-        // 开始记录按钮
-        $('#startSDRecordingButton').prop('disabled', !isIdle && !isStopped).toggle(!isRecording && !isPaused);
-        
-        // 暂停按钮
-        $('#pauseSDRecordingButton').prop('disabled', !isRecording).toggle(isRecording);
-        
-        // 恢复按钮
-        $('#resumeSDRecordingButton').prop('disabled', !isPaused).toggle(isPaused);
-        
-        // 停止按钮
-        $('#stopSDRecordingButton').prop('disabled', !isRecording && !isPaused).toggle(isRecording || isPaused);
-    }
-
-    /**
-     * 更新开始按钮状态
-     */
-    updateStartButtonState() {
-        const hasSelectedSensors = this.getSelectedSensorTypes().length > 0;
-        $('#startSDRecordingButton').prop('disabled', !hasSelectedSensors || !this.isConnected);
-    }
-
-    /**
-     * 启用控件
-     */
-    enableControls() {
-        $('.is-connect-enabled').prop('disabled', false);
-        this.updateStartButtonState();
-    }
-
-    /**
-     * 禁用控件
-     */
-    disableControls() {
-        $('.is-connect-enabled').prop('disabled', true);
-    }
-
-    /**
-     * 重置记录状态
+     * 重置记录状态（简化版本）
      */
     resetRecordingState() {
         this.recordingState = RECORDING_STATE.IDLE;
         this.currentConfig = null;
-        
-        // 清理UI状态
-        $('#sdRecordingStatus').hide();
-        $('#startSDRecordingButton').show().prop('disabled', true);
-        $('#pauseSDRecordingButton').hide();
-        $('#resumeSDRecordingButton').hide();
-        $('#stopSDRecordingButton').hide();
-        
-        // 重置表单
-        $('#sdRecordPressure').prop('checked', false);
-        $('#sdRecordTemperature').prop('checked', false);
-        $('#sdRecordIMU').prop('checked', false);
-        $('#sdFileName').val('');
-        
-        this.updateUI();
     }
 }
 
