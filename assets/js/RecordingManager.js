@@ -148,7 +148,7 @@ $(document).ready(function () {
             log("自动执行音频源配置", "MESSAGE");
         }
 
-        // 等待100ms后执行测试功能
+        // 等待200ms后执行测试功能，确保传感器配置已经完成
         setTimeout(() => {
             // 自动启动Sensor Control - 只有在未启动时才启动
             if ($('#testOcclusionButton').length && !$('#testOcclusionButton').prop('disabled')) {
@@ -158,8 +158,10 @@ $(document).ready(function () {
                     if (typeof window.setTestOcclusionAutoTrigger === 'function') {
                         window.setTestOcclusionAutoTrigger(true);
                     }
+                    
+                    // 确保在启动测试前重新读取最新的采样率值
                     $('#testOcclusionButton').click();
-                    log("自动启动传感器测试", "MESSAGE");
+                    log("自动启动传感器测试，麦克风采样率：" + $('#microphoneSamplingRate').val() + " Hz 压力传感器采样率：" + $('#pressureSensorSamplingRate').val() + " Hz", "MESSAGE");
                 } else {
                     log("传感器测试已在运行中", "MESSAGE");
                 }
@@ -175,7 +177,7 @@ $(document).ready(function () {
                     log("音频已在播放中", "MESSAGE");
                 }
             }
-        }, 100);
+        }, 200);
     }
 
     // 自动停止Sensor Control和Audio Control面板的功能
@@ -213,8 +215,6 @@ $(document).ready(function () {
         $("#testOcclusionButton").text("Test Occl.");
         $("#testOcclusionButton").removeClass("btn-stop");
         $("#testOcclusionButton").addClass("btn-control");
-        
-        // 清空Audio Control面板选项
     }
 
     function stopRecording() {

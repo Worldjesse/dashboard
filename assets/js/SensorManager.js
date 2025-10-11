@@ -89,7 +89,7 @@ $(document).ready(function () {
             // Enable the isMicEnabled checkbox
             $('#isMicEnabled').prop('checked', true);
 
-            // Keep the current microphoneSamplingRate value instead of forcing it to 16000
+            // 确保每次都重新读取最新的microphoneSamplingRate值
             var microphoneSamplingRate = $('#microphoneSamplingRate').val();
             log("Setting sampling rate for microphone: " + microphoneSamplingRate + " Hz");
 
