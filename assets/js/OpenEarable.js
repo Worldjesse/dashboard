@@ -126,6 +126,15 @@ const SERVICES = {
                 UUID: '566916a9-476d-11ee-be56-0242ac120002'
             }
         }
+    },
+    // 时间同步服务（固定 UUID）：连接后写一次 Unix UTC 毫秒，8 字节 uint64 小端序
+    TIME_SYNC_SERVICE: {
+        UUID: 'a1b2c3d4-1234-5678-abcd-000000000001',
+        CHARACTERISTICS: {
+            TIME_VALUE_CHARACTERISTIC: {
+                UUID: 'a1b2c3d4-1234-5678-abcd-000000000002'
+            }
+        }
     }
 }
 
@@ -172,6 +181,33 @@ class OpenEarable {
             SERVICES.DEVICE_INFO_SERVICE.CHARACTERISTICS.HARDWARE_GENERATION_CHARACTERISTIC.UUID
         );
         return new TextDecoder().decode(value);
+    }
+
+    /**
+     * 连接后写一次 Unix UTC 毫秒到设备，格式 8 字节 uint64 little-endian。
+     * 在 onDeviceReady() 末尾调用；失败不影响其它初始化。
+     */
+    async writeUtcTimeToDevice() {
+        try {
+            const unixMs = Date.now();
+            const buf = new ArrayBuffer(8);
+            const view = new DataView(buf);
+            view.setBigUint64(0, BigInt(unixMs), true);
+            await this.bleManager.writeCharacteristic(
+                SERVICES.TIME_SYNC_SERVICE.UUID,
+                SERVICES.TIME_SYNC_SERVICE.CHARACTERISTICS.TIME_VALUE_CHARACTERISTIC.UUID,
+                new Uint8Array(buf)
+            );
+            if (typeof log === 'function') {
+                log('UTC time synced: ' + unixMs + ' (' + new Date(unixMs).toISOString() + ')', 'SUCCESS');
+            }
+            console.log('UTC time synced:', unixMs);
+        } catch (e) {
+            if (typeof log === 'function') {
+                log('Time sync failed / not supported: ' + (e && e.message ? e.message : e), 'WARNING');
+            }
+            console.warn('Time sync failed / not supported:', e && e.message ? e.message : e);
+        }
     }
     
 
@@ -226,7 +262,9 @@ class OpenEarable {
 
         this.sensorManager.init();
         this.buttonManager.init();
-    }    
+
+        await this.writeUtcTimeToDevice();
+    }
 }
 
 class BLEManager {
